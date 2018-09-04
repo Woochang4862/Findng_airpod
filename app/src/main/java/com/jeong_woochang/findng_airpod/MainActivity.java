@@ -1,9 +1,15 @@
 package com.jeong_woochang.findng_airpod;
 
-import android.bluetooth.BluetoothDevice;
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,6 +32,9 @@ public class MainActivity extends AppCompatActivity{
     SharedPreferences appData;
     ArrayList<Log> logs;
     IntentFilter filter;
+    private boolean isAccessFineLocation=false;
+    private boolean isPermission=false;
+    private boolean isAccessCoarseLocation=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +45,12 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void init() {
+        callPermission();
+
+        //SharedPreferences Instance
         appData = getSharedPreferences("appData", MODE_PRIVATE);
 
+        //RecyclerView Adapter Init
         log = findViewById(R.id.log);
         logAdapter = new LogAdapter(new ArrayList<Log>());
         log.setAdapter(logAdapter);
@@ -51,11 +64,7 @@ public class MainActivity extends AppCompatActivity{
             }
         }).start();
 
-        filter=new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        registerReceiver(new BTStateChangedBroadcastReceiver(), filter);
-
+        //Clear Button Init
         clear = findViewById(R.id.clear);
         clear.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,6 +74,7 @@ public class MainActivity extends AppCompatActivity{
                         .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // FIRE ZE MISSILES!
+                                logs.clear();
                                 logAdapter.clear();
                                 appData.edit().clear().commit();
                                 logAdapter.notifyDataSetChanged();
@@ -76,26 +86,11 @@ public class MainActivity extends AppCompatActivity{
                                 return;
                             }
                         });
-                builder.create().show();
+                if (logs!=null)
+                    if (!logs.isEmpty())
+                        builder.create().show();
             }
         });
-
-    }
-
-    private void save(Log data) {
-        logs.clear();
-        logs.add(data);
-        if(load()!=null) {
-            for (Log log : load())
-                logs.add(log);
-        }
-        Gson gson=new Gson();
-        String json=gson.toJson(logs);
-        System.out.println(json);
-        SharedPreferences.Editor editor=appData.edit();
-        editor.putString("log", json);
-        editor.commit();
-        reply();
     }
 
     private ArrayList<Log> load() {
@@ -104,15 +99,79 @@ public class MainActivity extends AppCompatActivity{
         String json=appData.getString("log", null);
         Gson gson=new Gson();
         datas=gson.fromJson(json, listType);
+        System.out.println(datas);
         return datas;
     }
 
-    private void reply() {
+    public void reply() {
         logAdapter.clear();
         if (logs!=null) {
             for (Log log : logs)
-                logAdapter.addItem(log.getName(), log.getState(), log.getLat(), log.getLng());
+                logAdapter.addItem(log.getName(), log.getState(), log.getTime(), log.getLat(), log.getLng());
             logAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter("send_log"));
+    }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (logs!=null)
+                logs.clear();
+            logs=load();
+            reply();
+        }
+    };
+
+    @Override
+    protected void onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+        super.onPause();
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 100
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            isAccessFineLocation = true;
+
+        } else if (requestCode == 404
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            isAccessCoarseLocation = true;
+        }
+
+        if (isAccessFineLocation && isAccessCoarseLocation) {
+            isPermission = true;
+        }
+    }
+
+    // 권한 요청
+    private void callPermission() {
+        // Check the SDK version and whether the permission is already granted or not.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissions(
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    100);
+
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissions(
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    404);
+        } else {
+            isPermission = true;
         }
     }
 }

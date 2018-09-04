@@ -7,14 +7,16 @@ package com.jeong_woochang.findng_airpod;
 public class Log {
     String name;
     String state;
+    String time;
     String lat;
     String lng;
 
-    public Log(String name, String state, String lat, String lng){
-        this.name=name;
-        this.state=state;
-        this.lat=lat;
-        this.lng=lng;
+    public Log(String name, String state, String time, String lat, String lng) {
+        this.name = name;
+        this.state = state;
+        this.time = time;
+        this.lat = lat;
+        this.lng = lng;
     }
 
     public String getName() {
@@ -31,6 +33,14 @@ public class Log {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 
     public String getLat() {

@@ -1,6 +1,7 @@
 package com.jeong_woochang.findng_airpod;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -40,12 +41,14 @@ public class LogAdapter extends RecyclerView.Adapter<LogAdapter.ViewHolder> {
         final LinearLayout layout=holder.itemview;
         final TextView name=layout.findViewById(R.id.name);
         final TextView state=layout.findViewById(R.id.state);
+        final TextView time=layout.findViewById(R.id.time);
         final TextView lat=layout.findViewById(R.id.lat);
         final TextView lng=layout.findViewById(R.id.lng);
         final Log item = items.get(position);
 
         name.setText(item.getName());
         state.setText(item.getState());
+        time.setText(item.getTime());
         lat.setText(item.getLat());
         lng.setText(item.getLng());
 
@@ -53,6 +56,11 @@ public class LogAdapter extends RecyclerView.Adapter<LogAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
                 Toast.makeText(v.getContext(), String.valueOf(position), Toast.LENGTH_SHORT).show();
+                Intent intent=new Intent(v.getContext(), MapActivity.class);
+                intent.putExtra("Lat", item.getLat());
+                intent.putExtra("Lng", item.getLng());
+
+                v.getContext().startActivity(intent);
             }
         });
     }
@@ -80,8 +88,8 @@ public class LogAdapter extends RecyclerView.Adapter<LogAdapter.ViewHolder> {
         items.add(item);
     }
 
-    public void addItem(String name, String state, String lat, String lng){
-        Log temp=new Log(name, state, lat, lng);
+    public void addItem(String name, String state, String time, String lat, String lng){
+        Log temp=new Log(name, state, time, lat, lng);
         items.add(temp);
     }
 }

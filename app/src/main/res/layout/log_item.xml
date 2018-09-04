@@ -3,7 +3,6 @@
     android:id="@+id/item"
     android:layout_width="match_parent"
     android:layout_height="50dp"
-    android:layout_margin="10dp"
     android:elevation="5dp"
     android:orientation="vertical">
 
@@ -25,6 +24,15 @@
             android:layout_toRightOf="@id/name"
             android:textSize="10dp"
             android:gravity="left|bottom"
+            android:layout_marginLeft="5dp"/>
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:textSize="10dp"
+            android:gravity="right|bottom"
             android:layout_marginLeft="5dp"/>
     </RelativeLayout>
 
